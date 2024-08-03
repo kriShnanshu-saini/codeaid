@@ -1,5 +1,5 @@
 import { Permission } from 'node-appwrite';
-import { questionAttachmentBucket } from '@/models/name';
+import { questionAttachmentBucket } from '@/models/name'; 
 import { storage } from '@/models/server/config';
 
 export default async function getOrCreateStorage() {
@@ -23,9 +23,10 @@ export default async function getOrCreateStorage() {
 				undefined,
 				['jpg', 'png', 'gif', 'jpeg', 'webp', 'heic']
 			);
+            console.log('🟢 Storage created ✓');
             console.log('🟢 Storage connected ✓');
 		} catch (err) {
-            console.log("🚀 Error creating storage:", err)
+            console.log("🔴 Error creating storage:", err)
         }
 	}
 }
