@@ -59,7 +59,7 @@ export const useAuthStore = create<IAuthStore>()(
 					await account.create(ID.unique(), email, password, name);
 					return { success: true };
 				} catch (err) {
-					console.log('🚀 ~ login ~ err:', err);
+					console.log("🚀 ~ createAccount ~ err:", err)
 					return { success: false, error: err instanceof AppwriteException ? err : null };
 				}
 			},
