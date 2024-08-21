@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { persist } from 'zustand/middleware';
 
-import { AppwriteException, ID, Models } from 'appwrite';
+import { AppwriteException, ID, Models, OAuthProvider } from 'appwrite';
 import { account } from '@/models/client/config';
 
 export interface UserPrefs {
@@ -17,8 +17,25 @@ interface IAuthStore {
 
 	setHydrated(): void;
 	verifySession(): Promise<void>;
-	login(email: string, password: string): Promise<{ success: boolean; error?: AppwriteException | null }>;
-	createAccount(name: string, email: string, password: string): Promise<{ success: boolean; error?: AppwriteException | null }>;
+	login(
+		email: string,
+		password: string
+	): Promise<{
+		success: boolean;
+		error?: AppwriteException | null;
+	}>;
+	loginWithAuthProvider(authProvider: OAuthProvider): Promise<{
+		success: boolean;
+		error?: AppwriteException | null;
+	}>;
+	createAccount(
+		name: string,
+		email: string,
+		password: string
+	): Promise<{
+		success: boolean;
+		error?: AppwriteException | null;
+	}>;
 	logout(): Promise<void>;
 }
 
@@ -37,38 +54,74 @@ export const useAuthStore = create<IAuthStore>()(
 			async verifySession() {
 				try {
 					const session = await account.getSession('current');
+					console.log('🚀 ~ verifySession ~ session:', session);
 					set({ session });
-				} catch (err) {
-					console.log('🚀 ~ verifySession ~ err:', err);
+				} catch (error) {
+					console.log(error);
 				}
 			},
+
 			async login(email: string, password: string) {
 				try {
 					const session = await account.createEmailPasswordSession(email, password);
 					const [user, { jwt }] = await Promise.all([account.get<UserPrefs>(), account.createJWT()]);
-					if (!user.prefs?.reputation) await account.updatePrefs<UserPrefs>({ reputation: 0 });
-					set({ session, jwt, user });
+					if (!user.prefs?.reputation)
+						await account.updatePrefs<UserPrefs>({
+							reputation: 0,
+						});
+
+					set({ session, user, jwt });
+
 					return { success: true };
-				} catch (err) {
-					console.log('🚀 ~ login ~ err:', err);
-					return { success: false, error: err instanceof AppwriteException ? err : null };
+				} catch (error) {
+					console.log(error);
+					return {
+						success: false,
+						error: error instanceof AppwriteException ? error : null,
+					};
 				}
 			},
+
+			async loginWithAuthProvider(authProvider: OAuthProvider) {
+				try {
+					account.createOAuth2Session(authProvider, 'http://localhost:3000', 'http://localhost:3000/register');
+
+					const [user, { jwt }] = await Promise.all([account.get<UserPrefs>(), account.createJWT()]);
+					if (!user.prefs?.reputation) {
+						await account.updatePrefs<UserPrefs>({
+							reputation: 0,
+						});
+					}
+					const session = await account.getSession('current');
+					set({ session, user, jwt });
+					return { success: true, error: null };
+				} catch (err) {
+					return {
+						success: false,
+						error: err instanceof AppwriteException ? err : null,
+					};
+				}
+			},
+
 			async createAccount(name: string, email: string, password: string) {
 				try {
 					await account.create(ID.unique(), email, password, name);
-					return { success: true };
-				} catch (err) {
-					console.log("🚀 ~ createAccount ~ err:", err)
-					return { success: false, error: err instanceof AppwriteException ? err : null };
+					return { success: true, error: null };
+				} catch (error) {
+					console.log(error);
+					return {
+						success: false,
+						error: error instanceof AppwriteException ? error : null,
+					};
 				}
 			},
+
 			async logout() {
 				try {
 					await account.deleteSessions();
 					set({ session: null, jwt: null, user: null });
-				} catch (err) {
-					console.log('🚀 ~ logout ~ err:', err);
+				} catch (error) {
+					console.log(error);
 				}
 			},
 		})),
