@@ -9,13 +9,6 @@ import { useAuthStore } from '@/store/Auth';
 import Link from 'next/link';
 import { account } from '@/models/client/config';
 import { OAuthProvider } from 'appwrite';
-import { Metadata } from 'next';
-
-
-export const metadata: Metadata = {
-	title: 'Login',
-	description: 'Login to the CodeAid platform to get started',
-};
 
 const BottomGradient = () => {
 	return (
