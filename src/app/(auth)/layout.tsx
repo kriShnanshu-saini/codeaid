@@ -2,15 +2,9 @@
 
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { useAuthStore } from "@/store/Auth"
-import { Metadata } from "next";
 import { useRouter } from "next/navigation";
 import React from "react";
 
-
-export const metadata: Metadata = {
-	title: 'Sign up',
-	description: 'Create an account to get started with CodeAid',
-};
 
 const Layout = ({children}: {children: React.ReactNode}) => {
   const {session} = useAuthStore();
